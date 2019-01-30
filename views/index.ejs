@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="register">
+  <meta name="author" content="pangtong">
+  <title>登录</title>
+  <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/stylesheets/register.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="form-signin">
+      <h2 class="form-signin-heading">请随便登录</h2>
+      <label for="name" class="sr-only">用户名</label>
+      <input type="text" name="name" id="name" class="form-control" placeholder="请输入用户名" required autofocus>
+      <label for="password" class="sr-only">密码</label>
+      <input type="password" name="password" id="password" class="form-control" placeholder="请输入密码" required>
+      <button onclick="login()" class="btn btn-lg btn-primary btn-block" type="submit">登录</button>
+    </div>
+  </div>
+</body>
+<script>
+  function login(){
+    var name = document.getElementById('name').value;
+    var password = document.getElementById('password').value;
+    if(!name.trim()||!password.trim()){
+      alert('随便输入但不为空')
+    }else{
+      fetch('/users/register',{
+        method: 'POST',
+        credentials: 'include',
+        mode: "no-cors",
+        redirect: "follow",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `parms=${JSON.stringify({name:name,password:password})}`
+      }).then(response => {
+        if (response.ok) {
+            return response.json()
+        } else {
+            return Promise.reject()
+        }
+      })
+      .then(data => self.location='list')
+      .catch(error => alert('错了'));
+    }
+  }
+
+</script>
+</html>

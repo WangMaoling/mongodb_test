@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title><%= title %></title>
+    <script src="/javascripts/vue.js"></script>
+    
+    <style>
+        body{
+            position: relative;
+        }
+        dl{
+            display: flex;
+            border-top:1px solid #ccc;
+            margin:0;
+            padding:5px;
+        }
+        dt,dd{
+            width: 230px;
+            text-align: center;
+            margin:0;
+        }
+        .form-signin{
+            position: absolute;
+            left:50%;
+            top:50%;
+            transform: translate(-50%,-50%);
+            background: #fff;
+            box-shadow: 0 0 5px 5px #ccc;
+            padding:20px;
+        }
+        button{
+            cursor: pointer;
+        }
+        button.active{
+            background-color: #2674e9;
+        }
+        .control{
+            display: flex;
+        }
+        .control>div{
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>增、删、改、查、排序、分页</h1>
+    <hr>
+    <div id="app">
+        <button @click="addUser()">添加用户</button>
+        <div style="margin:20px 0">
+            <input style="width:200px;height:25px;" v-model="search" @input="page=1,getUserList()" type="text" placeholder="模糊查找用户名">
+        </div>
+        <div class="control">
+            <div>
+                总条数:{{total}}
+            </div>
+            <div>
+                每页条数:
+                <select @change="page=1,getUserList()" name="" id="" v-model="pageSize">
+                    <option value="2">2</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
+            <div>
+                <span>第几页:</span>
+                <button style="margin:5px;" :class="count==page?'active':''"  @click="page=count,getUserList()" v-for="count in Math.ceil(total/pageSize)">{{count}}</button>
+            </div>
+        </div>
+        <dl>
+            <dt>_id</dt>
+            <dt>用户名
+                    <button @click="userSort=1,getUserList()">正序</button>
+                    <button @click="userSort=-1,getUserList()">倒序</button>
+                    <button @click="userSort=0,getUserList()">不排序</button>
+            </dt>
+            <dt>密码</dt>
+            <dt>操作</dt>
+        </dl>
+        <dl v-for="(item,index) in userList">
+            <dd>{{item._id}}</dd>
+            <dd>{{item.name}}</dd>
+            <dd>{{item.password}}</dd>
+            <dd>
+                <button @click="edit(item)">编辑</button>
+                <button @click="del(item)">删除</button>
+            </dd>
+        </dl>
+        <div v-if="editBox" class="form-signin">
+            <button @click="editBox=false" style="float:right">X</button>
+            <h2 class="form-signin-heading">{{title==1?'添加':'编辑'}}</h2>
+            <label for="name" class="sr-only">用户名</label>
+            <input type="text" v-model="editData.name" name="name" id="name" class="form-control" placeholder="请输入用户名" required autofocus>
+            <label for="password" class="sr-only">密码</label>
+            <input type="password" v-model="editData.password" name="password" id="password" class="form-control" placeholder="请输入密码" required>
+            <button v-if="title==2" @click="editSubmit()" class="btn btn-lg btn-primary btn-block" type="submit">确定</button>
+            <button v-if="title==1" @click="addSubmit()" class="btn btn-lg btn-primary btn-block" type="submit">确定</button>
+        </div>
+        
+    </div>
+</body>
+<script>
+var app = new Vue({
+    el:'#app',
+    data:{
+        title:'1',//是编辑还是添加1为添加，2为编辑
+        userList:[],
+        editBox:false,
+        editData:{
+            _id:'',
+            name:'',
+            password:'',
+        },
+        item:'',
+        search:'',
+        userSort:'',//用户名排序 默认不排序 1正序，-1倒序
+        pageSize:10,//每页条数默认10
+        total:0,//数据总数 默认0
+        page:1//页码 默认第一页
+    },
+    methods:{
+        getUserList(){
+            var _that = this;
+            fetch('/users/getUserList',{
+                method: 'POST',
+                credentials: 'include',
+                mode: "no-cors",
+                redirect: "follow",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: `parms=${JSON.stringify({search:this.search,userSort:this.userSort,pageSize:this.pageSize,page:this.page})}`
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    return Promise.reject()
+                }
+            })
+            .then(data => {
+                _that.userList = data.data;
+                _that.total = data.total;
+            })
+            .catch(error => alert('错了'));
+        },
+        addSubmit(){
+            // 添加
+            var _that = this;
+            if(!this.editData.name.trim()||!this.editData.password.trim()){
+                alert('不能为空');
+            }else{
+                fetch('/users/addUser',{
+                    method: 'POST',
+                    credentials: 'include',
+                    mode: "no-cors",
+                    redirect: "follow",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: `parms=${JSON.stringify({name:this.editData.name,password:this.editData.password})}`
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json()
+                    } else {
+                        return Promise.reject()
+                    }
+                })
+                .then(data =>{
+                    if(data.code==0){
+                        _that.editBox = false;
+                        _that.getUserList();
+                        alert('添加成功')
+                    }else{
+                        alert(data.data)
+                    }
+                })
+                .catch(error => alert('错了'));
+            }
+        },
+        edit(item){
+            this.editBox = true;
+            this.editData._id = item._id;
+            this.editData.name = item.name;
+            this.editData.password = item.password;
+            this.title = '2'
+            this.item = item;
+        },
+        editSubmit(){
+            var _that = this;
+            if(!this.editData._id.trim()||!this.editData.name.trim()||!this.editData.password.trim()){
+                alert('不能为空');
+            }else{
+                fetch('/users/editUser',{
+                    method: 'POST',
+                    credentials: 'include',
+                    mode: "no-cors",
+                    redirect: "follow",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: `parms=${JSON.stringify({_id:this.editData._id,name:this.editData.name,password:this.editData.password})}`
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json()
+                    } else {
+                        return Promise.reject()
+                    }
+                })
+                .then(data =>{
+                    if(data.code==0){
+                        _that.item.name = _that.editData.name.trim();
+                        _that.item.password = _that.editData.password.trim();
+                        _that.editBox = false;
+                        alert('编辑成功')
+                    }else{
+                        alert(data.data)
+                    }
+                })
+                .catch(error => alert('错了'));
+            }
+        },
+        del(item){
+            var _that = this;
+            fetch('/users/delUser',{
+                method: 'POST',
+                credentials: 'include',
+                mode: "no-cors",
+                redirect: "follow",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: `parms=${JSON.stringify({_id:item._id})}`
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    return Promise.reject()
+                }
+            })
+            .then(data =>{
+                if(data.code==0){
+                    var index = _that.userList.indexOf(item)
+                    _that.userList.splice(index, 1)
+                    alert('删除成功')
+                }else{
+                    alert(data.data)
+                }
+            })
+            .catch(error => alert('错了'));
+        },
+        addUser(){
+            // 添加用户
+            this.editBox = true;
+            this.editData._id = '';
+            this.editData.name = '';
+            this.editData.password = '';
+            this.title = '1'
+        }
+    },
+    mounted(){
+        // 调用接口拿到所有数据
+        this.getUserList()
+        console.log('test')
+    }
+})
+
+</script>
+</html>
+

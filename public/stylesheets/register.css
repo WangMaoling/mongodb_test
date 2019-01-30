@@ -1,0 +1,47 @@
+/*注册页面样式*/
+body{
+    background:#e5e5e5;
+}
+.container{
+    width:400px;
+    margin:100px auto;
+    background:#fff;
+    border-radius:10px;
+    -webkit-border-radius:10px;
+    -o-border-radius:10px;
+    -moz-border-radius:10px;
+    -ms-border-radius:10px;
+    box-shadow:3px 3px 10px #000000;
+    text-align:center;
+}
+.form-signin .form-signin-heading{
+    margin:20px auto;
+    font-weight:bold;
+}
+.form-signin .form-control {
+    display:block;
+    width:350px;
+    margin:20px auto;
+    height:auto;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing:border-box;
+    padding:10px;
+    font-size:16px;
+}
+.form-signin .form-control:focus {
+    z-index:2;
+}
+.form-signin input[type="txt"] {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+.form-signin .btn-block{
+    display:block;
+    width:350px !important;
+    margin:30px auto;
+}
